@@ -1,11 +1,12 @@
-import numpy as np
+#! /usr/bin/env python
 import nibabel as nib
 import sys
 import gg_code.utils.process_data as gg_pd
 
+
 def main():
     dmri_filename = sys.argv[1]
-    dmri_bet_filename = sys.argv[2] #No extension
+    dmri_bet_filename = sys.argv[2]  # No extension
     output_filename = sys.argv[3]
 
     gg_pd.bet_brain(dmri_filename, dmri_bet_filename)
@@ -18,7 +19,6 @@ def main():
     mask = mask_load.get_fdata()
 
     data_seg = gg_pd.bet_diffusion_volume(data, mask)
-
 
     img = nib.Nifti2Image(data_seg, affine)
     nib.save(img, output_filename)

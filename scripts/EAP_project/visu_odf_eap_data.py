@@ -6,6 +6,7 @@ from dipy.core.sphere import Sphere
 from gg_code.utils.visu import visu_odf
 import sys
 
+
 def main():
     odf_file = sys.argv[1]
     bvec_file = sys.argv[2]
