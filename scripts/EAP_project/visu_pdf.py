@@ -7,11 +7,12 @@ import argparse
 import nibabel as nib
 import numpy as np
 
-from dipy.core.gradients import gradient_table
-from dipy.data import get_sphere
-from dipy.core.geometry import sphere2cart, cart2sphere
-from dipy.io.gradients import read_bvals_bvecs
+from fury import window, actor
 
+from dipy.data import get_sphere
+
+
+WINDOW_SIZE = (600, 600)
 
 
 def _build_arg_parser():
@@ -19,6 +20,8 @@ def _build_arg_parser():
                                 formatter_class=argparse.RawTextHelpFormatter)
     p.add_argument('in_pdf',
                    help='Path of the input pdf.')
+    p.add_argument('sphere',
+                   help='Type of sphere to use.')
 
     return p
 
@@ -27,6 +30,20 @@ def main():
     parser = _build_arg_parser()
     args = parser.parse_args()
 
+    pdf_data = nib.load(args.in_pdf)
+    pdf = pdf_data.get_fdata()
+
+    sph = get_sphere(args.sphere)
+
+    ren = window.renderer(background=window.colors.black)
+
+    pdf_actor = actor.odf_slicer(pdf, sphere=sph, colormap='jet', scale=0.4)
+
+    ren.add(pdf_actor)
+    window.show(ren, size=WINDOW_SIZE)
+
+    ren.rm(pdf_actor)
+    window.rm_all(ren)
 
 
 if __name__ == "__main__":
