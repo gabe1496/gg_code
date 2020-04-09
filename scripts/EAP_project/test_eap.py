@@ -10,6 +10,7 @@ import numpy as np
 
 from dipy.core.gradients import gradient_table
 from dipy.data import get_sphere
+from dipy.core.geometry import sphere2cart, cart2sphere
 from dipy.io.gradients import read_bvals_bvecs
 
 from scilpy.reconst.shore_ozarslan import ShoreOzarslanModel
@@ -21,14 +22,22 @@ def _build_arg_parser():
                                 formatter_class=argparse.RawTextHelpFormatter)
     p.add_argument('in_diffusion',
                    help='Path of the input diffusion volume.')
-    
+
     p.add_argument('mask',
                    help='Path of the mask.')
+
+    p.add_argument('bvals',
+                   help='Path of the bvals file, in FSL format.')
+
+    p.add_argument('bvecs',
+                   help='Path of the bvecs file, in FSL format.')
+
+    p.add_argument('out_filename',
+                   help='Path of the output.')
 
     p.add_argument('--radial_order', action='store', dest='radial_order',
                    metavar='int', default=8, type=int,
                    help='Radial order used for the SHORE fit. (Default: 8)')
-
 
     p.add_argument('--regul_weighting', action='store', dest='regul_weighting',
                    metavar='float', default=0.2, type=float,
@@ -42,8 +51,8 @@ def main():
     parser = _build_arg_parser()
     args = parser.parse_args()
 
-    vol = nib.load(args.input)
-    data = vol.get_data()
+    vol = nib.load(args.in_diffusion)
+    data = vol.get_fdata()
     affine = vol.get_affine()
 
     bvals, bvecs = read_bvals_bvecs(args.bvals, args.bvecs)
@@ -54,7 +63,13 @@ def main():
     voxels_with_values_mask = data[:, :, :, 0] > 0
     mask = voxels_with_values_mask * mask
 
-    sphere = get_sphere('symetric724')
+    sphere_rone = get_sphere('repulsion100')
+    vertices = sphere_rone.vertices
+    r, theta, phi = cart2sphere(vertices[:, 0], vertices[:, 1], vertices[:, 2])
+    r = r * 0.015
+    x, y, z = sphere2cart(r, theta, phi)
+
+    vertices_new = np.vstack((x, y, z)).T
 
     if args.regul_weighting <= 0:
         logging.info('Now computing SHORE ODF of radial order {0}'
@@ -74,10 +89,11 @@ def main():
                                          laplacian_regularization=True,
                                          laplacian_weighting=args.regul_weighting)
 
-    smfit = shore_model.fit(data, mask)
+    data = data[75, 73, 33]
+    smfit = shore_model.fit(data)
+    pdf = smfit.pdf(vertices_new)
 
-    coeff = smfit.shore_coeff()
-    print(coeff.shape)
+    nib.save(nib.Nifti1Image(pdf, affine), args.out_filename)
 
 
 if __name__ == "__main__":
