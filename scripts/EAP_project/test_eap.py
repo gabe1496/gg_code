@@ -26,6 +26,9 @@ def _build_arg_parser():
     p.add_argument('mask',
                    help='Path of the mask.')
 
+    p.add_argument('sphere',
+                   help='Type of sphere for the pdf compute.')
+
     p.add_argument('bvals',
                    help='Path of the bvals file, in FSL format.')
 
@@ -63,7 +66,7 @@ def main():
     voxels_with_values_mask = data[:, :, :, 0] > 0
     mask = voxels_with_values_mask * mask
 
-    sphere_rone = get_sphere('repulsion100')
+    sphere_rone = get_sphere(args.sphere)
     vertices = sphere_rone.vertices
     r, theta, phi = cart2sphere(vertices[:, 0], vertices[:, 1], vertices[:, 2])
     r = r * 0.015
@@ -89,7 +92,7 @@ def main():
                                          laplacian_regularization=True,
                                          laplacian_weighting=args.regul_weighting)
 
-    data = data[75, 73, 33]
+    data = data[74:77, 72:75, 32:35]
     smfit = shore_model.fit(data)
     pdf = smfit.pdf(vertices_new)
 
