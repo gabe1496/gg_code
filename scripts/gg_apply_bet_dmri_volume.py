@@ -6,16 +6,14 @@ import gg_code.utils.process_data as gg_pd
 
 def main():
     dmri_filename = sys.argv[1]
-    dmri_bet_filename = sys.argv[2]  # No extension
+    bet_mask = sys.argv[2]
     output_filename = sys.argv[3]
-
-    gg_pd.bet_brain(dmri_filename, dmri_bet_filename)
 
     vol = nib.load(dmri_filename)
     data = vol.get_fdata()
     affine = vol.get_affine()
 
-    mask_load = nib.load(dmri_bet_filename + "_mask.nii.gz")
+    mask_load = nib.load(bet_mask)
     mask = mask_load.get_fdata()
 
     data_seg = gg_pd.bet_diffusion_volume(data, mask)
