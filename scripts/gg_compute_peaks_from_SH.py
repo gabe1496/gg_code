@@ -57,7 +57,7 @@ def main():
         peaks_dirs[idx][:n] = direction[:n]
     nib.save(nib.Nifti1Image(
         reshape_peaks_for_visualization(peaks_dirs), affine),
-        args.peaks)
+        args.out_filename)
 
 
 if __name__ == "__main__":
