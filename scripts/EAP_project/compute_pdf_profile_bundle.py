@@ -99,8 +99,6 @@ def main():
                                    laplacian_regularization=False,
                                    positivity_constraint=args.pos_const)
 
-    mapmri_fit = mapmri_model.fit(data_small)
-
     # Compute pdf profile for each voxel and save
     # nb_vox = peaks.shape[0] * peaks.shape[1] * peaks.shape[2]
     # peaks_list = peaks_small.reshape((int(peaks_small/3), -1))
@@ -114,8 +112,9 @@ def main():
 
     for vox in list_vox:
         peak = peaks_small[vox[0], vox[1], vox[2]]
-        print(vox)
-        print(peak)
+        data = data_small[vox[0], vox[1], vox[2]]
+        mapmri_fit = mapmri_model.fit(data)
+        
         if np.abs(np.max(peak)) < 0.001:
             counter += 1
         else:
@@ -126,7 +125,6 @@ def main():
             x, y, z = sphere2cart(r_sample, theta, phi)
 
             r_points = np.vstack((x, y, z)).T
-            print(r_points.shape)
 
             pdf_sample[counter] = mapmri_fit.pdf(r_points)
             counter += 1
