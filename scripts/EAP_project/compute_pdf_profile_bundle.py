@@ -43,14 +43,14 @@ def _build_arg_parser():
                    metavar='int', default=6, type=int,
                    help='Radial order used for the SHORE fit. (Default: 8)')
 
-    p.add_argument('--zeta', metavar='int', default=500, type=int,
-                   help='Scale factor.')
+    p.add_argument('--pos_const', metavar='bool', default=True,
+                   help='Positivity constraint.')
 
-    p.add_argument('--lambdaN', metavar='float', default=1e-7, type=float,
-                   help='Scale factor.')
+    p.add_argument('--lap_reg', metavar='bool', default=True,
+                   help='Laplacian regularization.')
 
-    p.add_argument('--lambdaL', metavar='float', default=1e-8, type=float,
-                   help='Scale factor.')
+    p.add_argument('--lap_weight', metavar='float', default=0.2,
+                   help='Laplacian weighting in case of laplacian regularization.')
 
     return p
 
