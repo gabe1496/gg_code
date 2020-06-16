@@ -74,18 +74,18 @@ def main():
 
     # Segment data from roi
     ind_mask = np.argwhere(mask > 0)
-    data_small = data[np.min(ind_mask[:, 0]):np.max(ind_mask[:, 0]),
-                      np.min(ind_mask[:, 1]):np.max(ind_mask[:, 1]),
-                      np.min(ind_mask[:, 2]):np.max(ind_mask[:, 2])]
+    data_small = data[np.min(ind_mask[:, 0]):np.max(ind_mask[:, 0]) + 1,
+                      np.min(ind_mask[:, 1]):np.max(ind_mask[:, 1]) + 1,
+                      np.min(ind_mask[:, 2]):np.max(ind_mask[:, 2]) + 1]
 
     del data
 
     # Load peaks
     in_peaks = nib.load(args.in_peaks)
     peaks = in_peaks.get_fdata()
-    peaks_small = peaks[np.min(ind_mask[:, 0]):np.max(ind_mask[:, 0]),
-                        np.min(ind_mask[:, 1]):np.max(ind_mask[:, 1]),
-                        np.min(ind_mask[:, 2]):np.max(ind_mask[:, 2])]
+    peaks_small = peaks[np.min(ind_mask[:, 0]):np.max(ind_mask[:, 0]) + 1,
+                        np.min(ind_mask[:, 1]):np.max(ind_mask[:, 1]) + 1,
+                        np.min(ind_mask[:, 2]):np.max(ind_mask[:, 2]) + 1]
 
     # Fit the model
     if args.lap_reg:
