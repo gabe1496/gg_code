@@ -41,7 +41,7 @@ def _build_arg_parser():
 
     p.add_argument('--radial_order', action='store', dest='radial_order',
                    metavar='int', default=6, type=int,
-                   help='Radial order used for the SHORE fit. (Default: 8)')
+                   help='Radial order used for the SHORE fit. (Default: 6)')
 
     p.add_argument('--pos_const', metavar='bool', default=True,
                    help='Positivity constraint.')
@@ -102,18 +102,22 @@ def main():
     mapmri_fit = mapmri_model.fit(data_small)
 
     # Compute pdf profile for each voxel and save
-    peaks_list = peaks_small.reshape(int(peaks_small/3), -1)
-    print(peaks_list.shape)
+    # nb_vox = peaks.shape[0] * peaks.shape[1] * peaks.shape[2]
+    # peaks_list = peaks_small.reshape((int(peaks_small/3), -1))
+    # print(peaks_list.shape)
+    list_vox = np.indices((peaks_small.shape[0], peaks_small.shape[1], peaks_small.shape[2])).T.reshape(-1,3)
 
     r_sample = np.linspace(0.008, 0.025, args.nb_points)
-    pdf_sample = np.zeros((peaks_list.shape[0], args.nb_points))
+    pdf_sample = np.zeros((list_vox.shape[0], args.nb_points))
     counter = 0
+    print(list_vox.shape[0])
 
-    for vox in peaks_list:
-        if np.abs(np.max(vox)) < 0.001:
+    for vox in list_vox:
+        peak = peaks_small[vox[0], vox[1], vox[2]]
+        if np.abs(np.max(peak)) < 0.001:
             counter += 1
         else:
-            r, theta, phi = cart2sphere(vox[0], vox[1], vox[2])
+            r, theta, phi = cart2sphere(peak[0], peak[1], peak[2])
             theta = np.repeat(theta, args.nb_points)
             phi = np.repeat(phi, args.nb_points)
 
