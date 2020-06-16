@@ -114,6 +114,8 @@ def main():
 
     for vox in list_vox:
         peak = peaks_small[vox[0], vox[1], vox[2]]
+        print(vox)
+        print(peak)
         if np.abs(np.max(peak)) < 0.001:
             counter += 1
         else:
@@ -124,6 +126,7 @@ def main():
             x, y, z = sphere2cart(r_sample, theta, phi)
 
             r_points = np.vstack((x, y, z)).T
+            print(r_points.shape)
 
             pdf_sample[counter] = mapmri_fit.pdf(r_points)
             counter += 1
