@@ -34,7 +34,7 @@ def _build_arg_parser():
                    help='Path of the region of interest.')
 
     p.add_argument('out_filename',
-                   help='Path of the output peaks.')
+                   help='Path of the output pdf profile, with extension .csv.')
 
     p.add_argument('--nb_points', metavar='int', default=15,
                    help='Number of points to sample along the peaks.')
@@ -103,7 +103,9 @@ def main():
     # nb_vox = peaks.shape[0] * peaks.shape[1] * peaks.shape[2]
     # peaks_list = peaks_small.reshape((int(peaks_small/3), -1))
     # print(peaks_list.shape)
-    list_vox = np.indices((peaks_small.shape[0], peaks_small.shape[1], peaks_small.shape[2])).T.reshape(-1,3)
+    list_vox = np.indices((peaks_small.shape[0],
+                           peaks_small.shape[1],
+                           peaks_small.shape[2])).T.reshape(-1,3)
 
     r_sample = np.linspace(0.008, 0.025, args.nb_points)
     pdf_sample = np.zeros((list_vox.shape[0], args.nb_points))
@@ -114,9 +116,10 @@ def main():
         peak = peaks_small[vox[0], vox[1], vox[2]]
         data = data_small[vox[0], vox[1], vox[2]]
         mapmri_fit = mapmri_model.fit(data)
-        
-        if np.abs(np.max(peak)) < 0.001:
-            counter += 1
+
+        if np.max(np.abs(peak)) < 0.001:
+            pdf_sample = np.delete(pdf_sample, counter, 0)
+
         else:
             r, theta, phi = cart2sphere(peak[0], peak[1], peak[2])
             theta = np.repeat(theta, args.nb_points)
@@ -129,7 +132,8 @@ def main():
             pdf_sample[counter] = mapmri_fit.pdf(r_points)
             counter += 1
 
-    np.savetxt(args.out_filename, pdf_sample, fmt='%1.3f')
+    print(pdf_sample.shape[0])
+    np.savetxt(args.out_filename, pdf_sample, fmt='%1.3f', delimiter=',')
 
 
 if __name__ == "__main__":

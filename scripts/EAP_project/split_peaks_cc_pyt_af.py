@@ -50,24 +50,12 @@ def main():
     roi = nib.load(args.roi)
     mask = roi.get_fdata()
     ind_mask = np.argwhere(mask > 0)
-    grid = np.indices((np.max(ind_mask[:, 0]) - np.min(ind_mask[:, 0]) + 1,
-                       np.max(ind_mask[:, 1]) - np.min(ind_mask[:, 1]) + 1,
-                       np.max(ind_mask[:, 2]) - np.min(ind_mask[:, 2]) + 1)).T.reshape(-1,3)
-    grid_shape = grid.shape[0]
-    grid_data = np.vstack((np.repeat(np.min(ind_mask[:, 0]), grid_shape),
-                           np.repeat(np.min(ind_mask[:, 1]), grid_shape),
-                           np.repeat(np.min(ind_mask[:, 2]), grid_shape))).T
-
-    ind_square_mask = grid_data + grid
-
-    print(np.max(ind_mask[:, 0]))
-    print(ind_square_mask)
 
     # Split peaks for the three bundles
     for ind in ind_mask:
         peak_cc = peaks_cc[ind[0], ind[1], ind[2]]
         peak_cc = peak_cc.reshape(5, 3)
-        ind_cc = np.argwhere(np.argmax(peak_cc, axis=1) < 1)
+        ind_cc = np.argwhere(np.argmax(np.abs(peak_cc), axis=1) < 1)
         if (ind_cc.size) == 0:
             new_peak_cc = np.zeros((15))
             peaks_cc[ind[0], ind[1], ind[2]] = new_peak_cc
@@ -79,8 +67,8 @@ def main():
 
         peak_af = peaks_af[ind[0], ind[1], ind[2]]
         peak_af = peak_af.reshape(5, 3)
-        ind_af = np.argwhere(np.logical_and(np.argmax(peak_af, axis=1) < 2,
-                                            np.argmax(peak_af, axis=1) > 0))
+        ind_af = np.argwhere(np.logical_and(np.argmax(np.abs(peak_af), axis=1) < 2,
+                                            np.argmax(np.abs(peak_af), axis=1) > 0))
 
         if (ind_af.size) == 0:
             new_peak_af = np.zeros((15))
@@ -93,7 +81,7 @@ def main():
 
         peak_pt = peaks_pt[ind[0], ind[1], ind[2]]
         peak_pt = peak_pt.reshape(5, 3)
-        ind_pt = np.argwhere(np.argmax(peak_pt, axis=1) > 1)
+        ind_pt = np.argwhere(np.argmax(np.abs(peak_pt), axis=1) > 1)
 
         if (ind_pt.size) == 0:
             new_peak_pt = np.zeros((15))
