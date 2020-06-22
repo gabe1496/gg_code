@@ -43,6 +43,9 @@ def _build_arg_parser():
                    metavar='int', default=6, type=int,
                    help='Radial order used for the SHORE fit. (Default: 6)')
 
+    p.add_argument('--anisotropic_scaling', metavar='bool', default=True,
+                   help='Anisotropique scaling.')
+
     p.add_argument('--pos_const', metavar='bool', default=True,
                    help='Positivity constraint.')
 
@@ -90,12 +93,14 @@ def main():
     # Fit the model
     if args.lap_reg:
         mapmri_model = MapmriModel(gtab, radial_order=args.radial_order,
+                                   anisotropic_scaling=args.anisotropic_scaling,
                                    laplacian_regularization=True,
                                    laplacian_weighting=args.lap_weight,
                                    positivity_constraint=args.pos_const)
 
     else:
         mapmri_model = MapmriModel(gtab, radial_order=args.radial_order,
+                                   anisotropic_scaling=args.anisotropic_scaling,
                                    laplacian_regularization=False,
                                    positivity_constraint=args.pos_const)
 
