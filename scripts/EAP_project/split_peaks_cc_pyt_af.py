@@ -55,6 +55,7 @@ def main():
     for ind in ind_mask:
         peak_cc = peaks_cc[ind[0], ind[1], ind[2]]
         peak_cc = peak_cc.reshape(5, 3)
+        
         ind_cc = np.argwhere(np.argmax(np.abs(peak_cc), axis=1) < 1)
         if (ind_cc.size) == 0:
             new_peak_cc = np.zeros((15))
@@ -88,8 +89,7 @@ def main():
             peaks_pt[ind[0], ind[1], ind[2]] = new_peak_pt
         else:
             new_peak_pt = np.zeros((15))
-            new_peak_pt[0:3] = peak_pt[ind_cc[0]]
-
+            new_peak_pt[0:3] = peak_pt[ind_pt[0]]
             peaks_pt[ind[0], ind[1], ind[2]] = new_peak_pt
 
     # Save peaks file depending on the bundle
