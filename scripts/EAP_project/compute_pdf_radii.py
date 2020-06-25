@@ -14,7 +14,7 @@ from dipy.core.ndindex import ndindex
 from dipy.io.gradients import read_bvals_bvecs
 from dipy.direction.peaks import (peak_directions,
                                   reshape_peaks_for_visualization)
-from dipy.reconst.shore import ShoreModel
+from dipy.reconst.mapmri import MapmriModel
 
 from scilpy.utils.bvec_bval_tools import check_b0_threshold
 # from scilpy.reconst.shore_ozarslan import ShoreOzarslanModel
@@ -37,20 +37,23 @@ def _build_arg_parser():
                    help='Path of the bvecs file, in FSL format.')
 
     p.add_argument('out_filename',
-                   help='Path of the output.')
+                   help='Path of the output pdf.')
 
     p.add_argument('--radial_order', action='store', dest='radial_order',
                    metavar='int', default=8, type=int,
                    help='Radial order used for the SHORE fit. (Default: 8)')
 
-    p.add_argument('--zeta', metavar='int', default=700, type=int,
-                   help='Scale factor.')
+    p.add_argument('--anisotropic_scaling', metavar='bool', default=True,
+                   help='Anisotropique scaling.')
 
-    p.add_argument('--lambdaN', metavar='float', default=1e-8, type=float,
-                   help='Scale factor.')
+    p.add_argument('--pos_const', metavar='bool', default=True,
+                   help='Positivity constraint.')
 
-    p.add_argument('--lambdaL', metavar='float', default=1e-8, type=float,
-                   help='Scale factor.')
+    p.add_argument('--lap_reg', metavar='bool', default=True,
+                   help='Laplacian regularization.')
+
+    p.add_argument('--lap_weight', metavar='float', default=0.2,
+                   help='Laplacian weighting in case of laplacian regularization.')
 
     p.add_argument('--sphere', default='repulsion724',
                    help='Type of sphere for the pdf compute.')
@@ -82,9 +85,24 @@ def main():
     check_b0_threshold(args, bvals.min())
     gtab = gradient_table(bvals, bvecs, b0_threshold=bvals.min())
 
-    # mask = nib.load(args.mask).get_data().astype(np.bool)
-    # voxels_with_values_mask = data[:, :, :, 0] > 0
-    # mask = voxels_with_values_mask * mask
+    shape = data.shape[:-1]
+
+    # Fit the model
+    if args.lap_reg:
+        mapmri_model = MapmriModel(gtab, radial_order=args.radial_order,
+                                   anisotropic_scaling=args.anisotropic_scaling,
+                                   laplacian_regularization=True,
+                                   laplacian_weighting=args.lap_weight,
+                                   positivity_constraint=args.pos_const)
+
+    else:
+        mapmri_model = MapmriModel(gtab, radial_order=args.radial_order,
+                                   anisotropic_scaling=args.anisotropic_scaling,
+                                   laplacian_regularization=False,
+                                   positivity_constraint=args.pos_const)
+
+    mapmri_fit = mapmri_model.fit(data)
+    del data
 
     sphere_rone = get_sphere(args.sphere)
     vertices = sphere_rone.vertices
@@ -93,36 +111,24 @@ def main():
     x, y, z = sphere2cart(r, theta, phi)
 
     vertices_new = np.vstack((x, y, z)).T
+    mapmri_pdf = mapmri_fit.pdf(vertices_new)
 
-    shore_model = ShoreModel(gtab, radial_order=args.radial_order,
-                             zeta=args.zeta, lambdaN=args.lambdaN,
-                             lambdaL=args.lambdaL)
-
-    # shore_model = ShoreOzarslanModel(gtab, radial_order=8,
-    #                                  laplacian_regularization=True,
-    #                                  laplacian_weighting=0.2)
-
-    # data = data[65:68, 81:84, 32:35]
-    shape = data.shape[:-1]
     npeaks = 5
-    smfit = shore_model.fit(data)
-
-    pdf = smfit.pdf(vertices_new)
 
     if args.peaks:
         peaks_dirs = np.zeros((shape + (npeaks, 3)))
         for idx in ndindex(shape):
-            direction, pk, ind = peak_directions(pdf[idx], sphere_rone)
+            direction, pk, ind = peak_directions(mapmri_pdf[idx], sphere_rone)
             n = min(npeaks, pk.shape[0])
             peaks_dirs[idx][:n] = direction[:n]
         nib.save(nib.Nifti1Image(
             reshape_peaks_for_visualization(peaks_dirs), affine),
             args.peaks)
 
-    nib.save(nib.Nifti1Image(pdf, affine), args.out_filename)
+    nib.save(nib.Nifti1Image(mapmri_pdf, affine), args.out_filename)
 
     if args.odf:
-        odf = smfit.odf(sphere_rone)
+        odf = mapmri_fit.odf(sphere_rone)
 
         if args.peaks:
             peaks_dirs = np.zeros((shape + (npeaks, 3)))
@@ -132,9 +138,9 @@ def main():
                 peaks_dirs[idx][:n] = direction[:n]
             nib.save(nib.Nifti1Image(
                 reshape_peaks_for_visualization(peaks_dirs), affine),
-                args.peaks)
+                args.odf_peaks)
 
-        nib.save(nib.Nifti1Image(odf, affine), args.out_filename)
+        nib.save(nib.Nifti1Image(odf, affine), args.odf)
 
 
 if __name__ == "__main__":
