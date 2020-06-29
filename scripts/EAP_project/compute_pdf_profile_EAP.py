@@ -114,7 +114,7 @@ def main():
 
     peaks_dirs = np.zeros((shape + (npeaks, 3)))
     for idx in ndindex(shape):
-        
+
         direction, pk, ind = peak_directions(odf[idx], sphere)
         n = min(npeaks, pk.shape[0])
         peaks_dirs[idx][:n] = direction[:n]
@@ -125,11 +125,15 @@ def main():
 
     print('Peaks done.')
 
+    list_vox = np.indices((peaks_odf.shape[0],
+                           peaks_odf.shape[1],
+                           peaks_odf.shape[2])).T.reshape(-1, 3)
+
     peaks_cc = np.zeros_like(peaks_odf)
     peaks_af = np.zeros_like(peaks_odf)
     peaks_pt = np.zeros_like(peaks_odf)
 
-    for ind in ind_mask:
+    for ind in list_vox:
         peak_cc = peaks_odf[ind[0], ind[1], ind[2]]
         peak_cc = peak_cc.reshape(5, 3)
 
@@ -175,9 +179,6 @@ def main():
     nib.save(nib.Nifti1Image(peaks_pt, affine), args.out_directory + 'peaks_pt.nii.gz')
 
     print('Separation done.')
-    list_vox = np.indices((peaks_odf.shape[0],
-                           peaks_odf.shape[1],
-                           peaks_odf.shape[2])).T.reshape(-1, 3)
 
     r_sample = np.linspace(0.008, 0.025, args.nb_points)
     pdf_sample_cc = np.zeros((list_vox.shape[0], args.nb_points))
