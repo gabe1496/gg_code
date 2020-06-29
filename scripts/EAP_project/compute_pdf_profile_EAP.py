@@ -76,8 +76,6 @@ def main():
     check_b0_threshold(args, bvals.min())
     gtab = gradient_table(bvals, bvecs, b0_threshold=bvals.min())
 
-    shape = data.shape[:-1]
-
     # Load ROI
     roi = nib.load(args.roi)
     mask = roi.get_fdata()
@@ -89,6 +87,8 @@ def main():
                       np.min(ind_mask[:, 2]):np.max(ind_mask[:, 2]) + 1]
 
     del data
+
+    shape = data_small.shape[:-1]
 
     # Fit the model
     if args.lap_reg:
@@ -107,13 +107,14 @@ def main():
     mapmri_fit = mapmri_model.fit(data_small)
 
     sphere = get_sphere(args.sphere)
-
     npeaks = 5
 
     odf = mapmri_fit.odf(sphere)
+    print('ODF done.')
 
     peaks_dirs = np.zeros((shape + (npeaks, 3)))
     for idx in ndindex(shape):
+        
         direction, pk, ind = peak_directions(odf[idx], sphere)
         n = min(npeaks, pk.shape[0])
         peaks_dirs[idx][:n] = direction[:n]
@@ -121,6 +122,8 @@ def main():
     nib.save(nib.Nifti1Image(peaks_odf, affine), args.out_directory + 'peaks_eap_odf.nii.gz')
 
     nib.save(nib.Nifti1Image(odf, affine), args.out_directory + 'eap_odf.nii.gz')
+
+    print('Peaks done.')
 
     peaks_cc = np.zeros_like(peaks_odf)
     peaks_af = np.zeros_like(peaks_odf)
@@ -171,6 +174,7 @@ def main():
     nib.save(nib.Nifti1Image(peaks_af, affine), args.out_directory + 'peaks_af.nii.gz')
     nib.save(nib.Nifti1Image(peaks_pt, affine), args.out_directory + 'peaks_pt.nii.gz')
 
+    print('Separation done.')
     list_vox = np.indices((peaks_odf.shape[0],
                            peaks_odf.shape[1],
                            peaks_odf.shape[2])).T.reshape(-1, 3)
@@ -250,6 +254,7 @@ def main():
             counter += 1
 
     np.savetxt(args.out_directory + 'odf_pdf_pt.csv', pdf_sample_pt, fmt='%1.3f', delimiter=',')
+    print('Done.')
 
 
 if __name__ == "__main__":
