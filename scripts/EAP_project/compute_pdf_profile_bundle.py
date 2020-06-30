@@ -92,6 +92,7 @@ def main():
 
     # Fit the model
     if args.lap_reg:
+        print(true)
         mapmri_model = MapmriModel(gtab, radial_order=args.radial_order,
                                    anisotropic_scaling=args.anisotropic_scaling,
                                    laplacian_regularization=True,
@@ -99,6 +100,7 @@ def main():
                                    positivity_constraint=args.pos_const)
 
     else:
+        print(false)
         mapmri_model = MapmriModel(gtab, radial_order=args.radial_order,
                                    anisotropic_scaling=args.anisotropic_scaling,
                                    laplacian_regularization=False,
