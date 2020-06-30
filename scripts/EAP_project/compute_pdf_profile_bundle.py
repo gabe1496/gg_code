@@ -49,7 +49,7 @@ def _build_arg_parser():
     p.add_argument('--pos_const', metavar='bool', default=True,
                    help='Positivity constraint.')
 
-    p.add_argument('--lap_reg', metavar='bool', default=True,
+    p.add_argument('--lap_reg',
                    help='Laplacian regularization.')
 
     p.add_argument('--lap_weight', metavar='float', default=0.2,
@@ -92,7 +92,7 @@ def main():
 
     # Fit the model
     if args.lap_reg:
-        print(true)
+        print('true')
         mapmri_model = MapmriModel(gtab, radial_order=args.radial_order,
                                    anisotropic_scaling=args.anisotropic_scaling,
                                    laplacian_regularization=True,
@@ -100,7 +100,7 @@ def main():
                                    positivity_constraint=args.pos_const)
 
     else:
-        print(false)
+        print('false')
         mapmri_model = MapmriModel(gtab, radial_order=args.radial_order,
                                    anisotropic_scaling=args.anisotropic_scaling,
                                    laplacian_regularization=False,
