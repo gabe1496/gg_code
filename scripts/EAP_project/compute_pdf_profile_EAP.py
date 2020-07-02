@@ -52,8 +52,9 @@ def _build_arg_parser():
     p.add_argument('--pos_const', metavar='bool', default=True,
                    help='Positivity constraint.')
 
-    p.add_argument('--lap_reg', metavar='bool', default=True,
+    p.add_argument('--lap_reg',metavar='int', default=1,
                    help='Laplacian regularization.')
+
 
     p.add_argument('--lap_weight', metavar='float', default=0.2,
                    help='Laplacian weighting in case of laplacian regularization.')
@@ -86,12 +87,14 @@ def main():
                       np.min(ind_mask[:, 1]):np.max(ind_mask[:, 1]) + 1,
                       np.min(ind_mask[:, 2]):np.max(ind_mask[:, 2]) + 1]
 
+    nib.save(nib.Nifti1Image(data_small, affine), args.out_directory + 'data_seg_odf.nii.gz')
+    return 0
     del data
 
     shape = data_small.shape[:-1]
 
     # Fit the model
-    if args.lap_reg:
+    if args.lap_reg == 1:
         mapmri_model = MapmriModel(gtab, radial_order=args.radial_order,
                                    anisotropic_scaling=args.anisotropic_scaling,
                                    laplacian_regularization=True,
