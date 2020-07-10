@@ -36,7 +36,7 @@ def _build_arg_parser():
     p.add_argument('out_filename',
                    help='Path of the output pdf profile, with extension .csv.')
 
-    p.add_argument('--nb_points', metavar='int', default=15,
+    p.add_argument('--nb_points', metavar='int', default=20,
                    help='Number of points to sample along the peaks.')
 
     p.add_argument('--radial_order', action='store', dest='radial_order',
@@ -112,7 +112,7 @@ def main():
                            peaks_small.shape[1],
                            peaks_small.shape[2])).T.reshape(-1,3)
 
-    r_sample = np.linspace(0.008, 0.025, args.nb_points)
+    r_sample = np.linspace(0.0, 0.025, args.nb_points)
     pdf_sample = np.zeros((list_vox.shape[0], args.nb_points))
     counter = 0
     print(list_vox.shape[0])
