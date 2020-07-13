@@ -39,7 +39,7 @@ def _build_arg_parser():
     p.add_argument('out_directory',
                    help='Path of the output directory.')
 
-    p.add_argument('--nb_points', metavar='int', default=15,
+    p.add_argument('--nb_points', metavar='int', default=20,
                    help='Number of points to sample along the peaks.')
 
     p.add_argument('--radial_order', action='store', dest='radial_order',
@@ -87,10 +87,6 @@ def main():
                       np.min(ind_mask[:, 1]):np.max(ind_mask[:, 1]) + 1,
                       np.min(ind_mask[:, 2]):np.max(ind_mask[:, 2]) + 1]
 
-    nib.save(nib.Nifti1Image(data_small, affine), args.out_directory + 'data_seg_odf.nii.gz')
-    return 0
-    del data
-
     shape = data_small.shape[:-1]
 
     # Fit the model
@@ -109,35 +105,57 @@ def main():
 
     mapmri_fit = mapmri_model.fit(data_small)
 
-    sphere = get_sphere(args.sphere)
+    # sphere = get_sphere(args.sphere)
+    sphere_rone = get_sphere(args.sphere)
+    vertices = sphere_rone.vertices
+    r, theta, phi = cart2sphere(vertices[:, 0], vertices[:, 1], vertices[:, 2])
+    r = r * 0.015
+    x, y, z = sphere2cart(r, theta, phi)
     npeaks = 5
 
-    odf = mapmri_fit.odf(sphere)
-    print('ODF done.')
+    vertices_new = np.vstack((x, y, z)).T
+    pdf = mapmri_fit.pdf(vertices_new)
+    print('PDF done.')
 
     peaks_dirs = np.zeros((shape + (npeaks, 3)))
     for idx in ndindex(shape):
 
-        direction, pk, ind = peak_directions(odf[idx], sphere)
+        direction, pk, ind = peak_directions(pdf[idx], sphere_rone)
         n = min(npeaks, pk.shape[0])
         peaks_dirs[idx][:n] = direction[:n]
-        peaks_odf = reshape_peaks_for_visualization(peaks_dirs)
-    nib.save(nib.Nifti1Image(peaks_odf, affine), args.out_directory + 'peaks_eap_odf.nii.gz')
+        peaks_pdf = reshape_peaks_for_visualization(peaks_dirs)
+    nib.save(nib.Nifti1Image(peaks_pdf, affine), args.out_directory + 'peaks_eap_pdf.nii.gz')
 
-    nib.save(nib.Nifti1Image(odf, affine), args.out_directory + 'eap_odf.nii.gz')
+    nib.save(nib.Nifti1Image(pdf, affine), args.out_directory + 'eap_pdf.nii.gz')
 
     print('Peaks done.')
 
-    list_vox = np.indices((peaks_odf.shape[0],
-                           peaks_odf.shape[1],
-                           peaks_odf.shape[2])).T.reshape(-1, 3)
+    # odf = mapmri_fit.odf(sphere)
+    # print('ODF done.')
 
-    peaks_cc = np.zeros_like(peaks_odf)
-    peaks_af = np.zeros_like(peaks_odf)
-    peaks_pt = np.zeros_like(peaks_odf)
+    # peaks_dirs = np.zeros((shape + (npeaks, 3)))
+    # for idx in ndindex(shape):
+
+    #     direction, pk, ind = peak_directions(odf[idx], sphere)
+    #     n = min(npeaks, pk.shape[0])
+    #     peaks_dirs[idx][:n] = direction[:n]
+    #     peaks_odf = reshape_peaks_for_visualization(peaks_dirs)
+    # nib.save(nib.Nifti1Image(peaks_odf, affine), args.out_directory + 'peaks_eap_odf.nii.gz')
+
+    # nib.save(nib.Nifti1Image(odf, affine), args.out_directory + 'eap_odf.nii.gz')
+
+    # print('Peaks done.')
+
+    list_vox = np.indices((peaks_pdf.shape[0],
+                           peaks_pdf.shape[1],
+                           peaks_pdf.shape[2])).T.reshape(-1, 3)
+
+    peaks_cc = np.zeros_like(peaks_pdf)
+    peaks_af = np.zeros_like(peaks_pdf)
+    peaks_pt = np.zeros_like(peaks_pdf)
 
     for ind in list_vox:
-        peak_cc = peaks_odf[ind[0], ind[1], ind[2]]
+        peak_cc = peaks_pdf[ind[0], ind[1], ind[2]]
         peak_cc = peak_cc.reshape(5, 3)
 
         ind_cc = np.argwhere(np.argmax(np.abs(peak_cc), axis=1) < 1)
@@ -150,7 +168,7 @@ def main():
 
             peaks_cc[ind[0], ind[1], ind[2]] = new_peak_cc
 
-        peak_af = peaks_odf[ind[0], ind[1], ind[2]]
+        peak_af = peaks_pdf[ind[0], ind[1], ind[2]]
         peak_af = peak_af.reshape(5, 3)
         ind_af = np.argwhere(np.logical_and(np.argmax(np.abs(peak_af), axis=1) < 2,
                                             np.argmax(np.abs(peak_af), axis=1) > 0))
@@ -164,7 +182,7 @@ def main():
 
             peaks_af[ind[0], ind[1], ind[2]] = new_peak_af
 
-        peak_pt = peaks_odf[ind[0], ind[1], ind[2]]
+        peak_pt = peaks_pdf[ind[0], ind[1], ind[2]]
         peak_pt = peak_pt.reshape(5, 3)
         ind_pt = np.argwhere(np.argmax(np.abs(peak_pt), axis=1) > 1)
 
@@ -183,7 +201,7 @@ def main():
 
     print('Separation done.')
 
-    r_sample = np.linspace(0.008, 0.025, args.nb_points)
+    r_sample = np.linspace(0.0, 0.025, args.nb_points)
     pdf_sample_cc = np.zeros((list_vox.shape[0], args.nb_points))
     pdf_sample_af = np.zeros((list_vox.shape[0], args.nb_points))
     pdf_sample_pt = np.zeros((list_vox.shape[0], args.nb_points))
