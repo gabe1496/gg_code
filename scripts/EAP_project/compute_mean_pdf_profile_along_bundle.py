@@ -127,7 +127,7 @@ def main():
 
         normalization_weights = np.ones_like(seg_lengths)
         if args.length_weighting:
-            normalization_weights = seg_lengths / np.linalg.norm(data.header.get_zooms()[:3])
+            normalization_weights = seg_lengths / np.linalg.norm(vol.header.get_zooms()[:3])
 
         for vox_idx, seg, norm_weight in zip(vox_indices,
                                              segments,
