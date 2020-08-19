@@ -5,6 +5,7 @@ import argparse
 
 import nibabel as nib
 import numpy as np
+from tqdm import tqdm
 
 from dipy.reconst.mapmri import MapmriModel
 from dipy.core.gradients import gradient_table
@@ -104,48 +105,44 @@ def main():
     eap_map_shape.append(args.nb_points)
     eap_map = np.zeros(shape=eap_map_shape)
 
-    for crossed_indices in all_crossed_indices:
-        segments = crossed_indices[1:] - crossed_indices[:-1]
-        seg_lengths = np.linalg.norm(segments, axis=1)
+    crossed_indices = all_crossed_indices[20]
+    segments = crossed_indices[1:] - crossed_indices[:-1]
+    seg_lengths = np.linalg.norm(segments, axis=1)
+    print('segments', segments.shape)
 
-        # Remove points where the segment is zero.
-        # This removes numpy warnings of division by zero.
-        non_zero_lengths = np.nonzero(seg_lengths)[0]
-        segments = segments[non_zero_lengths]
-        seg_lengths = seg_lengths[non_zero_lengths]
+    # Remove points where the segment is zero.
+    # This removes numpy warnings of division by zero.
+    non_zero_lengths = np.nonzero(seg_lengths)[0]
+    segments = segments[non_zero_lengths]
+    seg_lengths = seg_lengths[non_zero_lengths]
+    print('segments non zero', segments.shape)
 
-        # # Compute the vertex on the sphere the closest to the segment
-        # test = np.dot(segments, sphere.vertices.T)
-        # test2 = (test.T / (seg_lengths * sphere_norm)).T
-        # angles = np.arccos(test2)
-        # sorted_angles = np.argsort(angles, axis=1)
-        # closest_vertex_indices = sorted_angles[:, 0]
+    # Those starting points are used for the segment vox_idx computations
+    strl_start = crossed_indices[non_zero_lengths]
+    vox_indices = (strl_start + (0.5 * segments)).astype(int)
+    print('vox indices', vox_indices.shape)
 
-        # Those starting points are used for the segment vox_idx computations
-        strl_start = crossed_indices[non_zero_lengths]
-        vox_indices = (strl_start + (0.5 * segments)).astype(int)
+    normalization_weights = np.ones_like(seg_lengths)
+    if args.length_weighting:
+        normalization_weights = seg_lengths / np.linalg.norm(vol.header.get_zooms()[:3])
 
-        normalization_weights = np.ones_like(seg_lengths)
-        if args.length_weighting:
-            normalization_weights = seg_lengths / np.linalg.norm(vol.header.get_zooms()[:3])
+    for vox_idx, seg, norm_weight in tqdm(zip(vox_indices,
+                                            segments,
+                                            normalization_weights)):
+        vox_idx = tuple(vox_idx)
+        data_vox = data[vox_idx]
+        # mapmri_fit = mapmri_model.fit(data_vox)
 
-        for vox_idx, seg, norm_weight in zip(vox_indices,
-                                             segments,
-                                             normalization_weights):
-            vox_idx = tuple(vox_idx)
-            data_vox = data[vox_idx]
-            mapmri_fit = mapmri_model.fit(data_vox)
+        r, theta, phi = cart2sphere(seg[0], seg[1], seg[2])
+        theta = np.repeat(theta, args.nb_points)
+        phi = np.repeat(phi, args.nb_points)
+        x, y, z = sphere2cart(r_sample, theta, phi)
+        r_points = np.vstack((x, y, z)).T
 
-            r, theta, phi = cart2sphere(seg[0], seg[1], seg[2])
-            theta = np.repeat(theta, args.nb_points)
-            phi = np.repeat(phi, args.nb_points)
-            x, y, z = sphere2cart(r_sample, theta, phi)
-            r_points = np.vstack((x, y, z)).T
+        # pdf = mapmri_fit.pdf(r_points) * norm_weight
 
-            pdf = mapmri_fit.pdf(r_points) * norm_weight
-
-            weight_map[vox_idx] += norm_weight
-            eap_map[vox_idx] += pdf
+        weight_map[vox_idx] += norm_weight
+        # eap_map[vox_idx] += pdf
 
     nib.save(nib.Nifti1Image(weight_map, affine), args.weight_map)
     nib.save(nib.Nifti1Image(eap_map, affine), args.eap_mean_map)
@@ -153,3 +150,51 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# r_sample = np.linspace(0.0, 0.025, args.nb_points)
+#     all_crossed_indices = grid_intersections(sft.streamlines)
+
+#     weight_map = np.zeros(shape=data_shape)
+#     eap_map_shape = list(data_shape)
+#     eap_map_shape.append(args.nb_points)
+#     eap_map = np.zeros(shape=eap_map_shape)
+
+#     for crossed_indices in all_crossed_indices:
+#         segments = crossed_indices[1:] - crossed_indices[:-1]
+#         seg_lengths = np.linalg.norm(segments, axis=1)
+
+#         # Remove points where the segment is zero.
+#         # This removes numpy warnings of division by zero.
+#         non_zero_lengths = np.nonzero(seg_lengths)[0]
+#         segments = segments[non_zero_lengths]
+#         seg_lengths = seg_lengths[non_zero_lengths]
+
+#         # Those starting points are used for the segment vox_idx computations
+#         strl_start = crossed_indices[non_zero_lengths]
+#         vox_indices = (strl_start + (0.5 * segments)).astype(int)
+
+#         normalization_weights = np.ones_like(seg_lengths)
+#         if args.length_weighting:
+#             normalization_weights = seg_lengths / np.linalg.norm(vol.header.get_zooms()[:3])
+
+#         for vox_idx, seg, norm_weight in zip(vox_indices,
+#                                              segments,
+#                                              normalization_weights):
+#             vox_idx = tuple(vox_idx)
+#             data_vox = data[vox_idx]
+#             mapmri_fit = mapmri_model.fit(data_vox)
+
+#             r, theta, phi = cart2sphere(seg[0], seg[1], seg[2])
+#             theta = np.repeat(theta, args.nb_points)
+#             phi = np.repeat(phi, args.nb_points)
+#             x, y, z = sphere2cart(r_sample, theta, phi)
+#             r_points = np.vstack((x, y, z)).T
+
+#             pdf = mapmri_fit.pdf(r_points) * norm_weight
+
+#             weight_map[vox_idx] += norm_weight
+#             eap_map[vox_idx] += pdf
+
+#     nib.save(nib.Nifti1Image(weight_map, affine), args.weight_map)
+#     nib.save(nib.Nifti1Image(eap_map, affine), args.eap_mean_map)
