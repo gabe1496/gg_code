@@ -132,7 +132,7 @@ def main():
                                           total=vox_indices.shape[0]):
         vox_idx = tuple(vox_idx)
         data_vox = data[vox_idx]
-        # mapmri_fit = mapmri_model.fit(data_vox)
+        mapmri_fit = mapmri_model.fit(data_vox)
 
         r, theta, phi = cart2sphere(seg[0], seg[1], seg[2])
         theta = np.repeat(theta, args.nb_points)
@@ -140,10 +140,10 @@ def main():
         x, y, z = sphere2cart(r_sample, theta, phi)
         r_points = np.vstack((x, y, z)).T
 
-        # pdf = mapmri_fit.pdf(r_points) * norm_weight
+        pdf = mapmri_fit.pdf(r_points) * norm_weight
 
         weight_map[vox_idx] += norm_weight
-        # eap_map[vox_idx] += pdf
+        eap_map[vox_idx] += pdf
 
     nib.save(nib.Nifti1Image(weight_map, affine), args.weight_map)
     nib.save(nib.Nifti1Image(eap_map, affine), args.eap_mean_map)
