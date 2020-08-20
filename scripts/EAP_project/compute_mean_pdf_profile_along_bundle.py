@@ -127,8 +127,9 @@ def main():
         normalization_weights = seg_lengths / np.linalg.norm(vol.header.get_zooms()[:3])
 
     for vox_idx, seg, norm_weight in tqdm(zip(vox_indices,
-                                            segments,
-                                            normalization_weights)):
+                                              segments,
+                                              normalization_weights),
+                                          total=vox_indices.shape[0]):
         vox_idx = tuple(vox_idx)
         data_vox = data[vox_idx]
         # mapmri_fit = mapmri_model.fit(data_vox)
