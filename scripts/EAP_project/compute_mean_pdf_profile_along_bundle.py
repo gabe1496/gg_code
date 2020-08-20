@@ -65,6 +65,26 @@ def _build_arg_parser():
     return p
 
 
+# def compute_pdf_parallel(args):
+#     mapmri_model = args[0]
+#     vox_idx = args[1]
+#     seg = args[2]
+#     norm_weight = args[3]
+#     nb_points = args[4]
+
+#     vox_idx = tuple(vox_idx)
+#     data_vox = data[vox_idx]
+#     mapmri_fit = mapmri_model.fit(data_vox)
+
+#     r, theta, phi = cart2sphere(seg[0], seg[1], seg[2])
+#     theta = np.repeat(theta, args.nb_points)
+#     phi = np.repeat(phi, args.nb_points)
+#     x, y, z = sphere2cart(r_sample, theta, phi)
+#     r_points = np.vstack((x, y, z)).T
+
+#     pdf = mapmri_fit.pdf(r_points) * norm_weight
+
+
 def main():
     parser = _build_arg_parser()
     args = parser.parse_args()
@@ -97,6 +117,7 @@ def main():
                                    laplacian_regularization=False,
                                    positivity_constraint=args.pos_const)
 
+    mapmri_fit = mapmri_model.fit(data)
     r_sample = np.linspace(0.0, 0.025, args.nb_points)
     all_crossed_indices = grid_intersections(sft.streamlines)
 
@@ -131,8 +152,6 @@ def main():
                                               normalization_weights),
                                           total=vox_indices.shape[0]):
         vox_idx = tuple(vox_idx)
-        data_vox = data[vox_idx]
-        mapmri_fit = mapmri_model.fit(data_vox)
 
         r, theta, phi = cart2sphere(seg[0], seg[1], seg[2])
         theta = np.repeat(theta, args.nb_points)
@@ -140,10 +159,10 @@ def main():
         x, y, z = sphere2cart(r_sample, theta, phi)
         r_points = np.vstack((x, y, z)).T
 
-        pdf = mapmri_fit.pdf(r_points) * norm_weight
+        pdf = mapmri_fit.pdf(r_points)
 
         weight_map[vox_idx] += norm_weight
-        eap_map[vox_idx] += pdf
+        eap_map[vox_idx] += pdf[vox_idx] * norm_weight
 
     nib.save(nib.Nifti1Image(weight_map, affine), args.weight_map)
     nib.save(nib.Nifti1Image(eap_map, affine), args.eap_mean_map)
