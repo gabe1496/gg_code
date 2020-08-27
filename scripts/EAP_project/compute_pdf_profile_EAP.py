@@ -227,7 +227,7 @@ def main():
             pdf_sample_cc[counter] = mapmri_fit.pdf(r_points)
             counter += 1
 
-    np.savetxt(args.out_directory + 'odf_pdf_cc.csv', pdf_sample_cc, fmt='%1.3f', delimiter=',')
+    np.savetxt(args.out_directory + 'cc_pdf_profile.csv', pdf_sample_cc, fmt='%1.3f', delimiter=',')
 
     counter = 0
 
@@ -251,7 +251,7 @@ def main():
             pdf_sample_af[counter] = mapmri_fit.pdf(r_points)
             counter += 1
 
-    np.savetxt(args.out_directory + 'odf_pdf_af.csv', pdf_sample_af, fmt='%1.3f', delimiter=',')
+    np.savetxt(args.out_directory + 'af_pdf_profile.csv', pdf_sample_af, fmt='%1.3f', delimiter=',')
 
     counter = 0
 
@@ -275,7 +275,7 @@ def main():
             pdf_sample_pt[counter] = mapmri_fit.pdf(r_points)
             counter += 1
 
-    np.savetxt(args.out_directory + 'odf_pdf_pt.csv', pdf_sample_pt, fmt='%1.3f', delimiter=',')
+    np.savetxt(args.out_directory + 'pt_pdf_profile.csv', pdf_sample_pt, fmt='%1.3f', delimiter=',')
     print('Done.')
 
 
