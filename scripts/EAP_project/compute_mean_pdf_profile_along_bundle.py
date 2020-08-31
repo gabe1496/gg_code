@@ -108,7 +108,7 @@ def main():
     sft.to_vox()
     sft.to_corner()
 
-    bounding_box = sft.compute_bounding_box()
+    bounding_box = sft.compute_bounding_box().astype(int)
     corner = np.array([np.min(bounding_box[:, 0]),
                        np.min(bounding_box[:, 1]),
                        np.min(bounding_box[:, 2])])
