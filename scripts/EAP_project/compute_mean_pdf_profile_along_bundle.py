@@ -75,6 +75,17 @@ def pdf_profile_parallel(args):
     r_sample = args[5]
     corner = args[6]
 
+    # vox_idx = args[0]
+    # seg = args[1]
+    # norm_weight = args[2]
+    # nb_points = args[3]
+    # r_sample = args[4]
+    # corner = args[5]
+
+    # print("vox_idx: ", vox_idx.shape)
+    # print("r_sample: ", r_sample.shape)
+    # print("corner :", corner.shape)
+
     pdf_map = np.zeros((vox_idx.shape[0], nb_points))
 
     for idx in range(len(vox_idx)):
@@ -85,9 +96,9 @@ def pdf_profile_parallel(args):
         r_points = np.vstack((x, y, z)).T
         pdf = mapmri_fit.pdf(r_points)
         vox = tuple(vox_idx[idx] - corner)
-        pdf_map[idx] = pdf[vox] * norm_weight[idx]
+        pdf_map[idx] = r_sample * norm_weight[idx]
 
-    return vox_idx, pdf_map
+    return vox_idx, norm_weight, pdf_map
 
 
 def main():
@@ -152,6 +163,7 @@ def main():
     # Those starting points are used for the segment vox_idx computations
     strl_start = crossed_indices[non_zero_lengths]
     vox_indices = (strl_start + (0.5 * segments)).astype(int)
+    # print("vox_indices: ", vox_indices.shape)
 
     normalization_weights = np.ones_like(seg_lengths)
     if args.length_weighting:
@@ -161,6 +173,7 @@ def main():
     chunks_vox = np.array_split(vox_indices, nbr_processes)
     chunks_seg = np.array_split(segments, nbr_processes)
     chunks_norm = np.array_split(normalization_weights, nbr_processes)
+    # print("chunk_vox: ", len(chunks_vox))
 
     pool = multiprocessing.Pool(nbr_processes)
     results = pool.map(pdf_profile_parallel,
@@ -173,14 +186,15 @@ def main():
                            itertools.repeat(corner)))
     pool.close()
     pool.join()
-    print(len(chunks_vox))
-    print(results.shape)
 
-    #     weight_map[vox_idx] += norm_weight
-    #     eap_map[vox_idx] += pdf[vox_idx] * norm_weight
+    for chunk in results:
+        for i in range(chunk[0].shape[0]):
+            vox = tuple(chunk[0][i])
+            weight_map[vox] += chunk[1][i]
+            eap_map[vox] += chunk[2][i]
 
-    # nib.save(nib.Nifti1Image(weight_map, affine), args.weight_map)
-    # nib.save(nib.Nifti1Image(eap_map, affine), args.eap_mean_map)
+    nib.save(nib.Nifti1Image(weight_map, affine), args.weight_map)
+    nib.save(nib.Nifti1Image(eap_map, affine), args.eap_mean_map)
 
 
 if __name__ == "__main__":
