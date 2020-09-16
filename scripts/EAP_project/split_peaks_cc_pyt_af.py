@@ -2,9 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import argparse
-
 import nibabel as nib
 import numpy as np
+
+from dipy.direction.peaks import reshape_peaks_for_visualization
 
 
 def _build_arg_parser():
@@ -35,67 +36,68 @@ def main():
 
     # Load peaks data
     data_cc = nib.load(args.in_peaks_cc)
-    peaks_cc = data_cc.get_fdata()
+    peaks_cc = data_cc.get_fdata(dtype='float32')
     affine_cc = data_cc.affine
 
     data_af = nib.load(args.in_peaks_af)
-    peaks_af = data_af.get_fdata()
+    peaks_af = data_af.get_fdata(dtype='float32')
     affine_af = data_af.affine
 
     data_pt = nib.load(args.in_peaks_pt)
-    peaks_pt = data_pt.get_fdata()
+    peaks_pt = data_pt.get_fdata(dtype='float32')
     affine_pt = data_pt.affine
 
     # Load ROI
     roi = nib.load(args.roi)
     mask = roi.get_fdata()
     ind_mask = np.argwhere(mask > 0)
+    mask[np.min(ind_mask[:, 0]):np.max(ind_mask[:, 0]) + 1,
+         np.min(ind_mask[:, 1]):np.max(ind_mask[:, 1]) + 1,
+         np.min(ind_mask[:, 2]):np.max(ind_mask[:, 2]) + 1] = 1
+    ind_mask = np.argwhere(mask > 0)
 
     # Split peaks for the three bundles
     for ind in ind_mask:
         peak_cc = peaks_cc[ind[0], ind[1], ind[2]]
         peak_cc = peak_cc.reshape(5, 3)
-        
+
         ind_cc = np.argwhere(np.argmax(np.abs(peak_cc), axis=1) < 1)
+        new_peak_cc = np.zeros((15), dtype='float32')
         if (ind_cc.size) == 0:
-            new_peak_cc = np.zeros((15))
             peaks_cc[ind[0], ind[1], ind[2]] = new_peak_cc
         else:
-            new_peak_cc = np.zeros((15))
             new_peak_cc[0:3] = peak_cc[ind_cc[0]]
-
             peaks_cc[ind[0], ind[1], ind[2]] = new_peak_cc
 
         peak_af = peaks_af[ind[0], ind[1], ind[2]]
         peak_af = peak_af.reshape(5, 3)
         ind_af = np.argwhere(np.logical_and(np.argmax(np.abs(peak_af), axis=1) < 2,
                                             np.argmax(np.abs(peak_af), axis=1) > 0))
-
+        new_peak_af = np.zeros((15), dtype='float32')
         if (ind_af.size) == 0:
-            new_peak_af = np.zeros((15))
             peaks_af[ind[0], ind[1], ind[2]] = new_peak_af
         else:
-            new_peak_af = np.zeros((15))
             new_peak_af[0:3] = peak_af[ind_af[0]]
-
             peaks_af[ind[0], ind[1], ind[2]] = new_peak_af
 
         peak_pt = peaks_pt[ind[0], ind[1], ind[2]]
         peak_pt = peak_pt.reshape(5, 3)
         ind_pt = np.argwhere(np.argmax(np.abs(peak_pt), axis=1) > 1)
+        new_peak_pt = np.zeros((15), dtype='float32')
 
         if (ind_pt.size) == 0:
-            new_peak_pt = np.zeros((15))
             peaks_pt[ind[0], ind[1], ind[2]] = new_peak_pt
         else:
-            new_peak_pt = np.zeros((15))
             new_peak_pt[0:3] = peak_pt[ind_pt[0]]
             peaks_pt[ind[0], ind[1], ind[2]] = new_peak_pt
 
     # Save peaks file depending on the bundle
-    nib.save(nib.Nifti1Image(peaks_cc, affine_cc), args.out_directory + 'peaks_cc.nii.gz')
-    nib.save(nib.Nifti1Image(peaks_af, affine_af), args.out_directory + 'peaks_af.nii.gz')
-    nib.save(nib.Nifti1Image(peaks_pt, affine_pt), args.out_directory + 'peaks_pt.nii.gz')
+    nib.save(nib.Nifti1Image(peaks_cc,
+                             affine_cc), args.out_directory + 'peaks_cc.nii.gz')
+    nib.save(nib.Nifti1Image(peaks_af,
+                             affine_af), args.out_directory + 'peaks_af.nii.gz')
+    nib.save(nib.Nifti1Image(peaks_pt,
+                             affine_pt), args.out_directory + 'peaks_pt.nii.gz')
 
 
 if __name__ == "__main__":
