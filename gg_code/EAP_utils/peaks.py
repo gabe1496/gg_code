@@ -20,8 +20,8 @@ def compute_peaks(glyph, sphere, npeaks=5):
 
 
 def segment_peaks_from_bundle(peaks, sft, mask, sphere, thr=45):
-    data_shape = mask.shape[0:3]
-    todi_obj = TrackOrientationDensityImaging(data_shape, sphere)
+    affine, data_shape, _, _ = sft.space_attributes
+    todi_obj = TrackOrientationDensityImaging(tuple(data_shape), sphere)
     todi_obj.compute_todi(sft.streamlines)
     avr_dir_todi = todi_obj.compute_average_dir()
     avr_dir_todi = todi_obj.reshape_to_3d(avr_dir_todi)

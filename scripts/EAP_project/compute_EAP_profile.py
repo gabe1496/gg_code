@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 """
 Script to compute EAP.
 """
@@ -37,10 +40,10 @@ def _build_arg_parser():
     p.add_argument('cc',
                    help='Path of the cc bundle.')
 
-        p.add_argument('af',
+    p.add_argument('af',
                    help='Path of the af bundle.')
 
-        p.add_argument('pt',
+    p.add_argument('pt',
                    help='Path of the pt bundle.')
 
     p.add_argument('out_directory',
@@ -91,6 +94,9 @@ def main():
     sft_cc = load_tractogram(args.cc, 'same', bbox_valid_check=True)
     sft_af = load_tractogram(args.af, 'same', bbox_valid_check=True)
     sft_pt = load_tractogram(args.pt, 'same', bbox_valid_check=True)
+    sft_cc.to_vox()
+    sft_af.to_vox()
+    sft_pt.to_vox()
 
     # Segment data from roi
     ind_mask = np.argwhere(mask > 0)
@@ -98,7 +104,6 @@ def main():
                       np.min(ind_mask[:, 1]):np.max(ind_mask[:, 1]) + 1,
                       np.min(ind_mask[:, 2]):np.max(ind_mask[:, 2]) + 1]
 
-    shape = data_small.shape[:-1]
     sphere = get_sphere(args.sphere)
     r = 0.015
 
@@ -116,33 +121,38 @@ def main():
                                    laplacian_regularization=False,
                                    positivity_constraint=args.pos_const)
 
-    pdf = glyph_from_model.compute_pdf(mapmri_model, data_small, sphere, r)
-    print('PDF done.')
+    # pdf = glyph_from_model.compute_pdf(mapmri_model, data_small, sphere, r)
+    # print('PDF done.')
 
-    all_peaks = peaks.compute_peaks(pdf, sphere)
-    print('Peaks done.')
+    # all_peaks = peaks.compute_peaks(pdf, sphere)
+    # print('Peaks done.')
 
-    nib.save(nib.Nifti1Image(peaks_pdf, affine), args.out_directory + 'peaks_eap_pdf.nii.gz')
-    nib.save(nib.Nifti1Image(pdf, affine), args.out_directory + 'eap_pdf.nii.gz')
+    # nib.save(nib.Nifti1Image(all_peaks, affine), args.out_directory + 'peaks_eap_pdf.nii.gz')
+    # nib.save(nib.Nifti1Image(pdf, affine), args.out_directory + 'eap_pdf.nii.gz')
 
-    cc_peaks = peaks.segment_peaks_from_bundle(all_peaks, sft_cc, mask, sphere)
-    af_peaks = peaks.segment_peaks_from_bundle(all_peaks, sft_af, mask, sphere)
-    pt_peaks = peaks.segment_peaks_from_bundle(all_peaks, sft_pt, mask, sphere)
+    pdf = nib.load(args.out_directory + 'eap_pdf.nii.gz')
+    pdf = pdf.get_fdata()
+    all_peaks = nib.load(args.out_directory + 'peaks_eap_pdf.nii.gz')
+    all_peaks = all_peaks.get_fdata()
+
+    cc_peaks = peaks.segment_peaks_from_bundle(all_peaks, sft_cc, mask, args.sphere)
+    af_peaks = peaks.segment_peaks_from_bundle(all_peaks, sft_af, mask, args.sphere)
+    pt_peaks = peaks.segment_peaks_from_bundle(all_peaks, sft_pt, mask, args.sphere)
 
     # Save peaks file depending on the bundle
-    nib.save(nib.Nifti1Image(peaks_cc, affine), args.out_directory + 'peaks_cc.nii.gz')
-    nib.save(nib.Nifti1Image(peaks_af, affine), args.out_directory + 'peaks_af.nii.gz')
-    nib.save(nib.Nifti1Image(peaks_pt, affine), args.out_directory + 'peaks_pt.nii.gz')
+    nib.save(nib.Nifti1Image(cc_peaks.astype('float32'), affine), args.out_directory + 'peaks_cc.nii.gz')
+    nib.save(nib.Nifti1Image(af_peaks.astype('float32'), affine), args.out_directory + 'peaks_af.nii.gz')
+    nib.save(nib.Nifti1Image(pt_peaks.astype('float32'), affine), args.out_directory + 'peaks_pt.nii.gz')
 
     print('Segmentation done.')
 
-    pdf_sample_cc = peaks.compute_bundle_eap_profile_along_peaks(model, data_small, cc_peaks)
-    pdf_sample_af = peaks.compute_bundle_eap_profile_along_peaks(model, data_small, af_peaks)
-    pdf_sample_pt = peaks.compute_bundle_eap_profile_along_peaks(model, data_small, pt_peaks)
+    # pdf_sample_cc = peaks.compute_bundle_eap_profile_along_peaks(model, data_small, cc_peaks)
+    # pdf_sample_af = peaks.compute_bundle_eap_profile_along_peaks(model, data_small, af_peaks)
+    # pdf_sample_pt = peaks.compute_bundle_eap_profile_along_peaks(model, data_small, pt_peaks)
 
-    np.savetxt(args.out_directory + 'cc_pdf_profile.csv', pdf_sample_cc, fmt='%1.3f', delimiter=',')
-    np.savetxt(args.out_directory + 'af_pdf_profile.csv', pdf_sample_af, fmt='%1.3f', delimiter=',')
-    np.savetxt(args.out_directory + 'pt_pdf_profile.csv', pdf_sample_pt, fmt='%1.3f', delimiter=',')
+    # np.savetxt(args.out_directory + 'cc_pdf_profile.csv', pdf_sample_cc, fmt='%1.3f', delimiter=',')
+    # np.savetxt(args.out_directory + 'af_pdf_profile.csv', pdf_sample_af, fmt='%1.3f', delimiter=',')
+    # np.savetxt(args.out_directory + 'pt_pdf_profile.csv', pdf_sample_pt, fmt='%1.3f', delimiter=',')
 
 
 if __name__ == "__main__":
