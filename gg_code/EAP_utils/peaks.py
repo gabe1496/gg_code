@@ -24,6 +24,7 @@ def segment_peaks_from_bundle(peaks, sft, mask, sphere, thr=45):
     affine, data_shape, _, _ = sft.space_attributes
     todi_obj = TrackOrientationDensityImaging(tuple(data_shape), sphere)
     todi_obj.compute_todi(sft.streamlines)
+    # avr_dir_todi = todi_obj.get_todi()
     avr_dir_todi = todi_obj.compute_average_dir()
     avr_dir_todi = todi_obj.reshape_to_3d(avr_dir_todi)
 
@@ -51,7 +52,7 @@ def segment_peaks_from_bundle(peaks, sft, mask, sphere, thr=45):
 
         peaks_bundle[ind[0], ind[1], ind[2]] = bundle_peak
 
-    return avg_dir, peaks_bundle
+    return avr_dir_seg, peaks_bundle
 
 def compute_bundle_eap_profile_along_peaks(model, data, bundle_peaks, nb_points=20):
     list_vox = np.indices((bundle_peaks.shape[0],
@@ -83,4 +84,3 @@ def compute_bundle_eap_profile_along_peaks(model, data, bundle_peaks, nb_points=
             counter += 1
 
     return pdf_sample
-
