@@ -24,7 +24,6 @@ def segment_peaks_from_bundle(peaks, sft, mask, sphere, thr=45):
     affine, data_shape, _, _ = sft.space_attributes
     todi_obj = TrackOrientationDensityImaging(tuple(data_shape), sphere)
     todi_obj.compute_todi(sft.streamlines)
-    # avr_dir_todi = todi_obj.get_todi()
     avr_dir_todi = todi_obj.compute_average_dir()
     avr_dir_todi = todi_obj.reshape_to_3d(avr_dir_todi)
 
@@ -43,14 +42,15 @@ def segment_peaks_from_bundle(peaks, sft, mask, sphere, thr=45):
         peaks_vox = peaks[ind[0], ind[1], ind[2]]
         avg_dir = avr_dir_seg[ind[0], ind[1], ind[2]]
         peaks_vox = peaks_vox.reshape(5, 3)
-        cos = np.abs(np.dot(peaks_vox, avg_dir))
-
-        max_peak_ind = np.argmax(cos)
+        rep = np.dot(peaks_vox, avg_dir)
+        rep2 = (rep / (np.linalg.norm(avg_dir) * np.linalg.norm(peaks_vox, axis=1)))
+        angle = np.arccos(rep2)
+        max_peak_ind = np.argsort(angle)[0]
         bundle_peak = np.zeros((15))
-        if np.logical_and(cos[max_peak_ind] <= np.cos(np.deg2rad(thr)), cos[max_peak_ind] > 0):
+        if max_peak_ind <= np.deg2rad(thr):
             bundle_peak[0:3] = peaks_vox[max_peak_ind]
 
-        peaks_bundle[ind[0], ind[1], ind[2]] = bundle_peak
+    peaks_bundle[ind[0], ind[1], ind[2]] = bundle_peak
 
     return avr_dir_seg, peaks_bundle
 
