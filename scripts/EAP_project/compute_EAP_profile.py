@@ -136,17 +136,17 @@ def main():
     all_peaks = all_peaks.get_fdata()
 
     cc_avr, cc_peaks = peaks.segment_peaks_from_bundle(all_peaks, sft_cc, mask, args.sphere)
-    # af_avr, af_peaks = peaks.segment_peaks_from_bundle(all_peaks, sft_af, mask, args.sphere)
-    # pt_avr, pt_peaks = peaks.segment_peaks_from_bundle(all_peaks, sft_pt, mask, args.sphere)
+    af_avr, af_peaks = peaks.segment_peaks_from_bundle(all_peaks, sft_af, mask, args.sphere)
+    pt_avr, pt_peaks = peaks.segment_peaks_from_bundle(all_peaks, sft_pt, mask, args.sphere)
 
     # Save peaks file depending on the bundle
     nib.save(nib.Nifti1Image(cc_avr.astype('float32'), affine), args.out_directory + 'avr_cc.nii.gz')
-    # nib.save(nib.Nifti1Image(af_avr.astype('float32'), affine), args.out_directory + 'avr_af.nii.gz')
-    # nib.save(nib.Nifti1Image(pt_avr.astype('float32'), affine), args.out_directory + 'avr_pt.nii.gz')
+    nib.save(nib.Nifti1Image(af_avr.astype('float32'), affine), args.out_directory + 'avr_af.nii.gz')
+    nib.save(nib.Nifti1Image(pt_avr.astype('float32'), affine), args.out_directory + 'avr_pt.nii.gz')
 
     nib.save(nib.Nifti1Image(cc_peaks.astype('float32'), affine), args.out_directory + 'peaks_cc.nii.gz')
-    # nib.save(nib.Nifti1Image(af_peaks.astype('float32'), affine), args.out_directory + 'peaks_af.nii.gz')
-    # nib.save(nib.Nifti1Image(pt_peaks.astype('float32'), affine), args.out_directory + 'peaks_pt.nii.gz')
+    nib.save(nib.Nifti1Image(af_peaks.astype('float32'), affine), args.out_directory + 'peaks_af.nii.gz')
+    nib.save(nib.Nifti1Image(pt_peaks.astype('float32'), affine), args.out_directory + 'peaks_pt.nii.gz')
 
     print('Segmentation done.')
 
