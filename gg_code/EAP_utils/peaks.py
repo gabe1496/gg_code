@@ -5,6 +5,7 @@ from dipy.core.ndindex import ndindex
 from dipy.core.geometry import sphere2cart, cart2sphere
 from scilpy.tractanalysis.todi import TrackOrientationDensityImaging
 
+
 def compute_peaks(glyph, sphere, npeaks=5):
     shape = glyph.shape[0:3]
 
@@ -31,7 +32,7 @@ def segment_peaks_from_bundle(peaks, sft, mask, sphere, thr=45):
                                np.min(ind_mask[:, 1]):np.max(ind_mask[:, 1]) + 1,
                                np.min(ind_mask[:, 2]):np.max(ind_mask[:, 2]) + 1]
 
-    list_vox = np.indices((peaks.shape[0],  
+    list_vox = np.indices((peaks.shape[0],
                            peaks.shape[1],
                            peaks.shape[2])).T.reshape(-1, 3)
 
@@ -50,7 +51,7 @@ def segment_peaks_from_bundle(peaks, sft, mask, sphere, thr=45):
 
         peaks_bundle[ind[0], ind[1], ind[2]] = bundle_peak
 
-    return peaks_bundle
+    return avg_dir, peaks_bundle
 
 def compute_bundle_eap_profile_along_peaks(model, data, bundle_peaks, nb_points=20):
     list_vox = np.indices((bundle_peaks.shape[0],
@@ -60,7 +61,7 @@ def compute_bundle_eap_profile_along_peaks(model, data, bundle_peaks, nb_points=
     r_sample = np.linspace(0.0, 0.025, nb_points)
     pdf_sample = np.zeros((list_vox.shape[0], nb_points))
 
-    counter = 0 
+    counter = 0
     for vox in list_vox:
         peak = bundle_peaks[vox[0], vox[1], vox[2]]
         data = data[vox[0], vox[1], vox[2]]
