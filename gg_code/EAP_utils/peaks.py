@@ -45,9 +45,12 @@ def segment_peaks_from_bundle(peaks, sft, mask, sphere, thr=45):
         rep = np.dot(peaks_vox, avg_dir)
         rep2 = (rep / (np.linalg.norm(avg_dir) * np.linalg.norm(peaks_vox, axis=1)))
         angle = np.arccos(rep2)
+        print(angle)
         max_peak_ind = np.argsort(angle)[0]
+        print(max_peak_ind)
         bundle_peak = np.zeros((15))
         if max_peak_ind <= np.deg2rad(thr):
+            print('toto')
             bundle_peak[0:3] = peaks_vox[max_peak_ind]
         peaks_bundle[ind[0], ind[1], ind[2]] = bundle_peak
 
