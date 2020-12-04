@@ -121,42 +121,36 @@ def main():
                                    laplacian_regularization=False,
                                    positivity_constraint=args.pos_const)
 
-    # pdf = glyph_from_model.compute_pdf(mapmri_model, data_small, sphere, r)
+    # pdf = glyph_from_model.compute_odf_mapmri(mapmri_model, data_small, sphere)
     # print('PDF done.')
 
     # all_peaks = peaks.compute_peaks(pdf, sphere)
     # print('Peaks done.')
 
-    # nib.save(nib.Nifti1Image(all_peaks, affine), args.out_directory + 'peaks_eap_pdf.nii.gz')
-    # nib.save(nib.Nifti1Image(pdf, affine), args.out_directory + 'eap_pdf.nii.gz')
-
-    pdf = nib.load(args.out_directory + 'eap_pdf.nii.gz')
-    pdf = pdf.get_fdata()
     all_peaks = nib.load(args.out_directory + 'peaks_eap_pdf.nii.gz')
     all_peaks = all_peaks.get_fdata()
+
+    # nib.save(nib.Nifti1Image(all_peaks, affine), args.out_directory + 'peaks_eap_pdf.nii.gz')
+    # nib.save(nib.Nifti1Image(pdf, affine), args.out_directory + 'eap_pdf.nii.gz')
 
     cc_avr, cc_peaks = peaks.segment_peaks_from_bundle(all_peaks, sft_cc, mask, args.sphere)
     af_avr, af_peaks = peaks.segment_peaks_from_bundle(all_peaks, sft_af, mask, args.sphere)
     pt_avr, pt_peaks = peaks.segment_peaks_from_bundle(all_peaks, sft_pt, mask, args.sphere)
 
     # Save peaks file depending on the bundle
-    nib.save(nib.Nifti1Image(cc_avr.astype('float32'), affine), args.out_directory + 'avr_cc.nii.gz')
-    nib.save(nib.Nifti1Image(af_avr.astype('float32'), affine), args.out_directory + 'avr_af.nii.gz')
-    nib.save(nib.Nifti1Image(pt_avr.astype('float32'), affine), args.out_directory + 'avr_pt.nii.gz')
-
-    nib.save(nib.Nifti1Image(cc_peaks.astype('float32'), affine), args.out_directory + 'peaks_cc.nii.gz')
-    nib.save(nib.Nifti1Image(af_peaks.astype('float32'), affine), args.out_directory + 'peaks_af.nii.gz')
-    nib.save(nib.Nifti1Image(pt_peaks.astype('float32'), affine), args.out_directory + 'peaks_pt.nii.gz')
+    # nib.save(nib.Nifti1Image(cc_peaks.astype('float32'), affine), args.out_directory + 'peaks_cc.nii.gz')
+    # nib.save(nib.Nifti1Image(af_peaks.astype('float32'), affine), args.out_directory + 'peaks_af.nii.gz')
+    # nib.save(nib.Nifti1Image(pt_peaks.astype('float32'), affine), args.out_directory + 'peaks_pt.nii.gz')
 
     print('Segmentation done.')
 
-    # pdf_sample_cc = peaks.compute_bundle_eap_profile_along_peaks(model, data_small, cc_peaks)
-    # pdf_sample_af = peaks.compute_bundle_eap_profile_along_peaks(model, data_small, af_peaks)
-    # pdf_sample_pt = peaks.compute_bundle_eap_profile_along_peaks(model, data_small, pt_peaks)
+    pdf_sample_cc = peaks.compute_bundle_eap_profile_along_peaks(mapmri_model, data_small, cc_avr)
+    pdf_sample_af = peaks.compute_bundle_eap_profile_along_peaks(mapmri_model, data_small, af_avr)
+    pdf_sample_pt = peaks.compute_bundle_eap_profile_along_peaks(mapmri_model, data_small, pt_avr)
 
-    # np.savetxt(args.out_directory + 'cc_pdf_profile.csv', pdf_sample_cc, fmt='%1.3f', delimiter=',')
-    # np.savetxt(args.out_directory + 'af_pdf_profile.csv', pdf_sample_af, fmt='%1.3f', delimiter=',')
-    # np.savetxt(args.out_directory + 'pt_pdf_profile.csv', pdf_sample_pt, fmt='%1.3f', delimiter=',')
+    np.savetxt(args.out_directory + 'avr_cc_pdf_profile.csv', pdf_sample_cc, fmt='%1.3f', delimiter=',')
+    np.savetxt(args.out_directory + 'avr_af_pdf_profile.csv', pdf_sample_af, fmt='%1.3f', delimiter=',')
+    np.savetxt(args.out_directory + 'avr_pt_pdf_profile.csv', pdf_sample_pt, fmt='%1.3f', delimiter=',')
 
 
 if __name__ == "__main__":
