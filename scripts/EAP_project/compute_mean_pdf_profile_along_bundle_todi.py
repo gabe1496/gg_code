@@ -5,8 +5,6 @@ import argparse
 
 import nibabel as nib
 import numpy as np
-import multiprocessing
-import itertools
 
 from dipy.reconst.mapmri import MapmriModel
 from dipy.core.gradients import gradient_table
@@ -14,7 +12,6 @@ from dipy.core.geometry import sphere2cart, cart2sphere
 from dipy.io.gradients import read_bvals_bvecs
 
 from scilpy.io.streamlines import load_tractogram_with_reference
-from scilpy.tractanalysis.grid_intersections import grid_intersections
 from scilpy.utils.bvec_bval_tools import check_b0_threshold
 from scilpy.tractanalysis.todi import TrackOrientationDensityImaging
 
@@ -26,6 +23,9 @@ def _build_arg_parser():
     p.add_argument('in_bundle',
                    help='Path of the bundle file.')
 
+    p.add_argument('in_label_map',
+                   help='Path of the input label map.')
+
     p.add_argument('in_diffusion',
                    help='Path of the input diffusion volume.')
 
@@ -35,11 +35,8 @@ def _build_arg_parser():
     p.add_argument('bvecs',
                    help='Path of the bvecs file, in FSL format.')
 
-    p.add_argument('weight_map',
-                   help='Path of the output weight map.')
-
-    p.add_argument('eap_mean_map',
-                   help='Path of the output mean eap map.')
+    p.add_argument('out_directory',
+                   help='Path of the output directory.')
 
     p.add_argument('--length_weighting', action='store_true',
                    help='If set, will weigh the EAP values according to '
@@ -47,6 +44,12 @@ def _build_arg_parser():
 
     p.add_argument('--nb_points', metavar='int', default=20,
                    help='Number of points to sample along the peaks.')
+
+    p.add_argument('--nb_sections', metavar='int', default=5,
+                   help='Number of sections dividing the bundle.')
+
+    p.add_argument('--sample_size', metavar='int', default=20,
+                   help='Number of points to sample in each section of the bundle.')
 
     p.add_argument('--radial_order', action='store', dest='radial_order',
                    metavar='int', default=6, type=int,
@@ -63,6 +66,9 @@ def _build_arg_parser():
 
     p.add_argument('--lap_weight', metavar='float', default=0.2,
                    help='Laplacian weighting in case of laplacian regularization.')
+
+    p.add_argument('--sphere', default='repulsion724',
+                   help='Type of sphere for the pdf compute.')
 
     return p
 
@@ -87,7 +93,7 @@ def main():
 
     # Load label map
     vol_label = nib.load(args.in_label_map)
-    label_map = vol_label.gte_fdata()
+    label_map = vol_label.get_fdata()
 
     # Compute average directions for each voxel
     affine, data_shape, _, _ = sft.space_attributes
@@ -140,6 +146,7 @@ def main():
                 pdf_sample[counter] = mapmri_fit.pdf(r_points)
                 counter += 1
         np.savetxt(args.out_directory + str(i) + '_pdf_profile.csv', pdf_sample, fmt='%1.3f', delimiter=',')
+
 
 if __name__ == "__main__":
     main()
