@@ -6,6 +6,7 @@ import argparse
 import nibabel as nib
 import numpy as np
 
+from scipy.ndimage.morphology import binary_erosion
 from dipy.reconst.mapmri import MapmriModel
 from dipy.core.gradients import gradient_table
 from dipy.core.geometry import sphere2cart, cart2sphere
@@ -123,8 +124,11 @@ def main():
     div = 1 / nb_sections
     sections_len = max_label * div
 
+    label_map_binary = binary_erosion(label_map)
+    label_map_ero = label_map * label_map_binary
+
     for i in range(args.nb_sections):
-        sec_vox = np.argwhere((label_map > sections_len * i) & (label_map >= sections_len * (i+1)))
+        sec_vox = np.argwhere((label_map_ero > sections_len * i) & (label_map_ero >= sections_len * (i+1)))
         rand = np.random.randint(len(sec_vox), size=args.sample_size)
         vox_list = sec_vox[rand]
         pdf_sample = np.zeros((args.sample_size, args.nb_points))
@@ -135,7 +139,7 @@ def main():
             mapmri_fit = mapmri_model.fit(data_vox)
             print(peak)
 
-            if np.max(np.abs(peak)) < 0.001:
+            if np.max(np.abs(peak)) < 0.00001:
                 print('tototo')
                 pdf_sample = np.delete(pdf_sample, counter, 0)
 
