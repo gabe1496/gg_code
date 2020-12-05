@@ -61,7 +61,7 @@ def _build_arg_parser():
     p.add_argument('--pos_const', metavar='bool', default=True,
                    help='Positivity constraint.')
 
-    p.add_argument('--lap_reg', metavar='int', default=1, type=int
+    p.add_argument('--lap_reg', metavar='int', default=1, type=int,
                    help='Laplacian regularization.')
 
     p.add_argument('--lap_weight', metavar='float', default=0.2,
