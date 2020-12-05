@@ -42,13 +42,13 @@ def _build_arg_parser():
                    help='If set, will weigh the EAP values according to '
                         'segment lengths. [%(default)s]')
 
-    p.add_argument('--nb_points', metavar='int', default=20,
+    p.add_argument('--nb_points', metavar='int', default=20, type=int,
                    help='Number of points to sample along the peaks.')
 
-    p.add_argument('--nb_sections', metavar='int', default=5,
+    p.add_argument('--nb_sections', metavar='int', default=5, type=int,
                    help='Number of sections dividing the bundle.')
 
-    p.add_argument('--sample_size', metavar='int', default=20,
+    p.add_argument('--sample_size', metavar='int', default=20, type=int,
                    help='Number of points to sample in each section of the bundle.')
 
     p.add_argument('--radial_order', action='store', dest='radial_order',
@@ -61,7 +61,7 @@ def _build_arg_parser():
     p.add_argument('--pos_const', metavar='bool', default=True,
                    help='Positivity constraint.')
 
-    p.add_argument('--lap_reg', metavar='int', default=1,
+    p.add_argument('--lap_reg', metavar='int', default=1, type=int
                    help='Laplacian regularization.')
 
     p.add_argument('--lap_weight', metavar='float', default=0.2,
