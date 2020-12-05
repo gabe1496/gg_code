@@ -134,20 +134,16 @@ def main():
             data_vox = data[vox[0], vox[1], vox[2]]
             mapmri_fit = mapmri_model.fit(data_vox)
 
-            if np.max(np.abs(peak)) < 0.001:
-                pdf_sample = np.delete(pdf_sample, counter, 0)
+            r, theta, phi = cart2sphere(peak[0], peak[1], peak[2])
+            theta = np.repeat(theta, args.nb_points)
+            phi = np.repeat(phi, args.nb_points)
 
-            else:
-                r, theta, phi = cart2sphere(peak[0], peak[1], peak[2])
-                theta = np.repeat(theta, args.nb_points)
-                phi = np.repeat(phi, args.nb_points)
+            x, y, z = sphere2cart(r_sample, theta, phi)
 
-                x, y, z = sphere2cart(r_sample, theta, phi)
+            r_points = np.vstack((x, y, z)).T
 
-                r_points = np.vstack((x, y, z)).T
-
-                pdf_sample[counter] = mapmri_fit.pdf(r_points)
-                counter += 1
+            pdf_sample[counter] = mapmri_fit.pdf(r_points)
+            counter += 1
         np.savetxt(args.out_directory + str(i) + '_pdf_profile.csv', pdf_sample, fmt='%1.3f', delimiter=',')
 
 
