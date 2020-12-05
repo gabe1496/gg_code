@@ -118,7 +118,7 @@ def main():
 
     r_sample = np.linspace(0.0, 0.025, args.nb_points)
 
-    sections_len = np.max(label_map) // args.nb_sections
+    sections_len = np.floor_divide(np.max(label_map), args.nb_sections)
 
     for i in range(args.nb_sections):
         sec_vox = np.argwhere((label_map > sections_len * i) & (label_map >= sections_len * (i+1)))
