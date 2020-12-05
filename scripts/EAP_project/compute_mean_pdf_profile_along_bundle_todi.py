@@ -45,7 +45,7 @@ def _build_arg_parser():
     p.add_argument('--nb_points', metavar='int', default=20,
                    help='Number of points to sample along the peaks.')
 
-    p.add_argument('--nb_sections', metavar='float', default=5,
+    p.add_argument('--nb_sections', metavar='int', default=5,
                    help='Number of sections dividing the bundle.')
 
     p.add_argument('--sample_size', metavar='int', default=20,
@@ -118,7 +118,10 @@ def main():
 
     r_sample = np.linspace(0.0, 0.025, args.nb_points)
 
-    sections_len = np.floor_divide(np.max(label_map), args.nb_sections)
+    max_label = np.max(label_map)
+    nb_sections = args.nb_sections
+    div = 1 / nb_sections
+    sections_len = max_label * div
 
     for i in range(args.nb_sections):
         sec_vox = np.argwhere((label_map > sections_len * i) & (label_map >= sections_len * (i+1)))
