@@ -45,7 +45,7 @@ def _build_arg_parser():
     p.add_argument('--nb_points', metavar='int', default=20,
                    help='Number of points to sample along the peaks.')
 
-    p.add_argument('--nb_sections', metavar='int', default=5,
+    p.add_argument('--nb_sections', metavar='float', default=5,
                    help='Number of sections dividing the bundle.')
 
     p.add_argument('--sample_size', metavar='int', default=20,
