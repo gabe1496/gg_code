@@ -133,17 +133,23 @@ def main():
             peak = avr_dir_todi[vox[0], vox[1], vox[2]]
             data_vox = data[vox[0], vox[1], vox[2]]
             mapmri_fit = mapmri_model.fit(data_vox)
+            print(peak)
 
-            r, theta, phi = cart2sphere(peak[0], peak[1], peak[2])
-            theta = np.repeat(theta, args.nb_points)
-            phi = np.repeat(phi, args.nb_points)
+            if np.max(np.abs(peak)) < 0.001:
+                print('tototo')
+                pdf_sample = np.delete(pdf_sample, counter, 0)
 
-            x, y, z = sphere2cart(r_sample, theta, phi)
+            else:
+                r, theta, phi = cart2sphere(peak[0], peak[1], peak[2])
+                theta = np.repeat(theta, args.nb_points)
+                phi = np.repeat(phi, args.nb_points)
 
-            r_points = np.vstack((x, y, z)).T
+                x, y, z = sphere2cart(r_sample, theta, phi)
 
-            pdf_sample[counter] = mapmri_fit.pdf(r_points)
-            counter += 1
+                r_points = np.vstack((x, y, z)).T
+
+                pdf_sample[counter] = mapmri_fit.pdf(r_points)
+                counter += 1
         np.savetxt(args.out_directory + str(i) + '_pdf_profile.csv', pdf_sample, fmt='%1.3f', delimiter=',')
 
 
