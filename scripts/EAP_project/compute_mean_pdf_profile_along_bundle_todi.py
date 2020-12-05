@@ -127,7 +127,7 @@ def main():
         sec_vox = np.argwhere((label_map > sections_len * i) & (label_map >= sections_len * (i+1)))
         rand = np.random.randint(len(sec_vox), size=args.sample_size)
         vox_list = sec_vox[rand]
-        pdf_sample = np.zeros((args.nb_sections, args.sample_size, args.nb_points))
+        pdf_sample = np.zeros((args.sample_size, args.nb_points))
         counter = 0
         for vox in vox_list:
             peak = avr_dir_todi[vox[0], vox[1], vox[2]]
