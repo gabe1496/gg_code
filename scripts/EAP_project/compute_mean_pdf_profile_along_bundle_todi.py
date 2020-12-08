@@ -5,6 +5,7 @@ import argparse
 
 import nibabel as nib
 import numpy as np
+import csv
 
 from scipy.ndimage.morphology import binary_erosion
 from dipy.reconst.mapmri import MapmriModel
@@ -129,21 +130,17 @@ def main():
 
     for i in range(args.nb_sections):
         sec_vox = np.argwhere((label_map_ero > sections_len * i) & (label_map_ero >= sections_len * (i+1)))
-        rand = np.random.randint(len(sec_vox), size=args.sample_size)
+        rand = np.random.randint(len(sec_vox), size=args.sample_size + 200)
         vox_list = sec_vox[rand]
         pdf_sample = np.zeros((args.sample_size, args.nb_points))
         counter = 0
-        for vox in vox_list:
+        j = 0
+        while j != args.nb_points:
+            vox = vox_list[j]
             peak = avr_dir_todi[vox[0], vox[1], vox[2]]
             data_vox = data[vox[0], vox[1], vox[2]]
             mapmri_fit = mapmri_model.fit(data_vox)
-            print(peak)
-
-            if np.max(np.abs(peak)) < 0.00001:
-                print('tototo')
-                pdf_sample = np.delete(pdf_sample, counter, 0)
-
-            else:
+            if np.max(np.abs(peak)) > 0.00001:
                 r, theta, phi = cart2sphere(peak[0], peak[1], peak[2])
                 theta = np.repeat(theta, args.nb_points)
                 phi = np.repeat(phi, args.nb_points)
@@ -154,7 +151,11 @@ def main():
 
                 pdf_sample[counter] = mapmri_fit.pdf(r_points)
                 counter += 1
-        np.savetxt(args.out_directory + str(i) + '_pdf_profile.csv', pdf_sample, fmt='%1.3f', delimiter=',')
+            j += 1
+        with open(args.out_directory + str(i) + '.csv', 'a') as f:
+            writer = csv.writer(f)
+            writer.writerows(pdf_sample)
+        f.close
 
 
 if __name__ == "__main__":
