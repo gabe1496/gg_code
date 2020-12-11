@@ -26,6 +26,9 @@ def _build_arg_parser():
     p.add_argument('bvecs',
                    help='Path of the bvecs file, in FSL format.')
 
+    p.add_argument('out_directory',
+                   help='Path of the output directory.')
+
     p.add_argument('--radial_order', action='store', dest='radial_order',
                    metavar='int', default=8, type=int,
                    help='Radial order used for the SHORE fit. (Default: 8)')
