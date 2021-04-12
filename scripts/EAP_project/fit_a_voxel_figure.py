@@ -75,13 +75,14 @@ def main():
                                    positivity_constraint=args.pos_const)
 
     mapmri_fit = mapmri_model.fit(data)
-    pts = np.linspace(0.0, 0.020)
+    pts = np.linspace(-0.020, 0.020, 175)
 
     xv, yv, zv = np.meshgrid(pts, pts, pts)
     grid = np.vstack((np.ravel(xv), np.ravel(yv), np.ravel(zv))).T
 
     pdf = mapmri_fit.pdf(grid)
-    nib.save(nib.Nifti1Image(pdf, affine), args.out_directory + 'eap_pdf.nii.gz')
+    pdf_grid = np.reshape(pdf, (175, 175, 175))
+    nib.save(nib.Nifti1Image(pdf_grid, affine), args.out_directory + 'eap_pdf.nii.gz')
 
 
 if __name__ == "__main__":
