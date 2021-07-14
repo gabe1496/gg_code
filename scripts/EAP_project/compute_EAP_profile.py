@@ -49,12 +49,18 @@ def _build_arg_parser():
     p.add_argument('out_directory',
                    help='Path of the output directory.')
 
+    p.add_argument('--big_delta', metavar='float', default=None,
+                   help='Big delta for gtab.')
+
+    p.add_argument('--small_delta', metavar='float', default=None,
+                   help='Small delta for gtab.')
+
     p.add_argument('--nb_points', metavar='int', default=20,
                    help='Number of points to sample along the peaks.')
 
     p.add_argument('--radial_order', action='store', dest='radial_order',
-                   metavar='int', default=8, type=int,
-                   help='Radial order used for the SHORE fit. (Default: 8)')
+                   metavar='int', default=6, type=int,
+                   help='Radial order used for the SHORE fit. (Default: 6)')
 
     p.add_argument('--anisotropic_scaling', metavar='bool', default=True,
                    help='Anisotropique scaling.')
@@ -84,7 +90,14 @@ def main():
 
     bvals, bvecs = read_bvals_bvecs(args.bvals, args.bvecs)
     check_b0_threshold(args, bvals.min())
-    gtab = gradient_table(bvals, bvecs, b0_threshold=bvals.min())
+    if args.big_delta is not None and args.small_delta is not None:
+        gtab = gradient_table(bvals,
+                              bvecs,
+                              b0_threshold=bvals.min(),
+                              big_delta=args.big_delta,
+                              small_delta=args.small_delta)
+    else:
+        gtab = gradient_table(bvals, bvecs, b0_threshold=bvals.min())
 
     # Load ROI
     roi = nib.load(args.roi)
@@ -105,7 +118,6 @@ def main():
                       np.min(ind_mask[:, 2]):np.max(ind_mask[:, 2]) + 1]
 
     sphere = get_sphere(args.sphere)
-    r = 0.015
 
     # Fit the model
     if args.lap_reg == 1:
