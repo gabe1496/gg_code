@@ -49,10 +49,10 @@ def _build_arg_parser():
     p.add_argument('out_directory',
                    help='Path of the output directory.')
 
-    p.add_argument('--big_delta', metavar='float', default=None, type=float
+    p.add_argument('--big_delta', metavar='float', default=None, type=float,
                    help='Big delta for gtab.')
 
-    p.add_argument('--small_delta', metavar='float', default=None, type=float
+    p.add_argument('--small_delta', metavar='float', default=None, type=float,
                    help='Small delta for gtab.')
 
     p.add_argument('--nb_points', metavar='int', default=20,
